@@ -52,7 +52,7 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 
 const categories = {
   income: ['Salary', 'Freelance','Familly', 'Investment','Loan','Side Hustle', 'Business', 'Gift', 'Other Income'],
-  expense: ['Food & Dining', 'Transportation', 'Shopping', 'Entertainment', 'Bills & Utilities', 'Healthcare', 'Education', 'Travel', 'Other']
+  expense: ['Food & Dining', 'Transportation','Family','Shopping', 'Entertainment', 'Bills & Utilities', 'Healthcare', 'Education', 'Travel', 'Other']
 };
 
 interface AddTransactionDialogProps {
