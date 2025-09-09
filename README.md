@@ -1,5 +1,9 @@
 # 🌟 Personal Finance Tracker - Complete Feature List
 
+## 🚀 Deployment
+
+This application is ready to be deployed on Vercel. For detailed deployment instructions, please refer to the [Vercel Deployment Guide](./VERCEL_DEPLOYMENT.md).
+
 ## 📊 Core Financial Management
 
 ### 💰 Balance Overview

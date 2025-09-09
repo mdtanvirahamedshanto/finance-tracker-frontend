@@ -1,5 +1,5 @@
 // Service Worker for Personal Finance Tracker PWA
-const CACHE_NAME = 'finance-tracker-v1';
+const CACHE_NAME = 'finance-tracker-v2';
 
 // Assets to cache on install
 const STATIC_ASSETS = [

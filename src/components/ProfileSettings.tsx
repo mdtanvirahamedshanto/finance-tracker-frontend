@@ -118,15 +118,7 @@ export function ProfileSettings({ open, onOpenChange }: ProfileSettingsProps) {
                   onChange={(e) => setEmail(e.target.value)} 
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="savingsGoal">Savings Goal ($)</Label>
-                <Input 
-                  id="savingsGoal" 
-                  type="number" 
-                  value={savingsGoal} 
-                  onChange={(e) => setSavingsGoal(e.target.value)} 
-                />
-              </div>
+             
             </>
           )}
         </CardContent>
