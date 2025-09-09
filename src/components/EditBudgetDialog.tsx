@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,16 @@ export function EditBudgetDialog({
   
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+    useEffect(() => {
+    if (open) {
+      const initialBudgets: Record<string, number> = {};
+      budgetItems.forEach(item => {
+        initialBudgets[item.category] = item.budgeted;
+      });
+      setEditedBudgets(initialBudgets);
+    }
+  }, [open, budgetItems]);
 
   const handleInputChange = (category: string, value: string) => {
     const amount = parseInt(value, 10);
