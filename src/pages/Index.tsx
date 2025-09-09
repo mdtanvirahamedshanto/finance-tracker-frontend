@@ -267,9 +267,9 @@ const Index = () => {
               <div className="relative">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                       <span className="sr-only">Open profile menu</span>
-                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
                         {user?.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                     </Button>
