@@ -48,10 +48,20 @@ export function EditBudgetDialog({
   const handleInputChange = (category: string, value: string) => {
     const amount = parseInt(value, 10);
     if (!isNaN(amount) && amount >= 0) {
-      setEditedBudgets(prev => ({
-        ...prev,
-        [category]: amount
-      }));
+      // Create a new object to hold the updated budgets
+      const newBudgets: Record<string, number> = {};
+      
+      // First, set all other categories to 0
+      budgetItems.forEach(item => {
+        if (item.category !== category) {
+          newBudgets[item.category] = 0;
+        }
+      });
+      
+      // Then, set the value for the selected category
+      newBudgets[category] = amount;
+      
+      setEditedBudgets(newBudgets);
     }
   };
 
@@ -112,7 +122,8 @@ export function EditBudgetDialog({
                 type="number"
                 min="0"
                 step="50"
-                value={editedBudgets[item.category]}
+                // The value of the input should reflect the state
+                value={editedBudgets[item.category] || 0}
                 onChange={(e) => handleInputChange(item.category, e.target.value)}
                 className="text-right"
               />
