@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +13,20 @@ import {
 } from '@/components/ui/dialog';
 import { budgetAPI } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+
+// Available budget categories
+const AVAILABLE_CATEGORIES = ['Housing', 'Utilities', 'Food', 'Transportation', 'Entertainment', 'Shopping', 'Other'];
+
+// Category colors for visual representation
+const CATEGORY_COLORS = {
+  Housing: '#4f46e5',
+  Utilities: '#0ea5e9',
+  Food: '#10b981',
+  Transportation: '#f59e0b',
+  Entertainment: '#8b5cf6',
+  Shopping: '#ec4899',
+  Other: '#6b7280'
+};
 
 interface BudgetItem {
   category: string;
@@ -28,29 +41,6 @@ interface EditBudgetDialogProps {
   budgetItems: BudgetItem[];
   onBudgetsUpdated: () => void;
 }
-
-// Available budget categories
-const AVAILABLE_CATEGORIES = [
-  'Housing',
-  'Food',
-  'Transportation',
-  'Entertainment',
-  'Shopping',
-  'Utilities',
-  'Other',
-  // Add more categories as needed
-];
-
-// Category colors
-const CATEGORY_COLORS: Record<string, string> = {
-  Housing: '#FF6384',
-  Food: '#36A2EB',
-  Transportation: '#FFCE56',
-  Entertainment: '#4BC0C0',
-  Shopping: '#9966FF',
-  Utilities: '#FF9F40',
-  Other: '#C9CBCF',
-};
 
 export function EditBudgetDialog({ 
   open, 
@@ -67,14 +57,7 @@ export function EditBudgetDialog({
   });
   
   const [loading, setLoading] = useState(false);
-  const [newCategory, setNewCategory] = useState<string>('');
-  const [newAmount, setNewAmount] = useState<string>('0');
   const { toast } = useToast();
-  
-  // Get categories that are not yet in the budget
-  const availableCategories = AVAILABLE_CATEGORIES.filter(
-    category => !Object.keys(editedBudgets).includes(category)
-  );
 
   const handleInputChange = (category: string, value: string) => {
     const amount = parseInt(value, 10);
@@ -85,28 +68,24 @@ export function EditBudgetDialog({
       }));
     }
   };
-  
-  const handleAddCategory = () => {
-    if (newCategory && !editedBudgets[newCategory]) {
-      const amount = parseInt(newAmount, 10);
-      if (!isNaN(amount) && amount >= 0) {
-        setEditedBudgets(prev => ({
-          ...prev,
-          [newCategory]: amount
-        }));
-        setNewCategory('');
-        setNewAmount('0');
-      }
-    }
-  };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Convert to array format for API
-      const budgetsArray = Object.entries(editedBudgets).map(([category, amount]) => ({
+      // Ensure all categories are included with at least 0 as default value
+      const completeEditedBudgets = { ...editedBudgets };
+      
+      // Add any missing categories with default value of 0
+      AVAILABLE_CATEGORIES.forEach(category => {
+        if (!(category in completeEditedBudgets)) {
+          completeEditedBudgets[category] = 0;
+        }
+      });
+      
+      // Convert to API format
+      const budgetsArray = Object.entries(completeEditedBudgets).map(([category, amount]) => ({
         category,
-        amount
+        amount: Number(amount) || 0 // Ensure amount is a number and defaults to 0
       }));
       
       await budgetAPI.updateBatch(budgetsArray);
@@ -141,62 +120,36 @@ export function EditBudgetDialog({
         </DialogHeader>
         
         <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-          {/* Existing budget items */}
-          {Object.entries(editedBudgets).map(([category, amount]) => (
-            <div key={category} className="grid grid-cols-2 items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: CATEGORY_COLORS[category] || CATEGORY_COLORS.Other }}
-                />
-                <Label htmlFor={`budget-${category}`} className="text-sm">
-                  {category}
-                </Label>
-              </div>
-              <Input
-                id={`budget-${category}`}
-                type="number"
-                value={amount}
-                onChange={(e) => handleInputChange(category, e.target.value)}
-                className="text-right"
-              />
-            </div>
-          ))}
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground mb-2">Enter budget amounts for categories you want to set. Any category without a value will default to 0.</p>
+          </div>
           
-          {/* Add new category */}
-          {availableCategories.length > 0 && (
-            <div className="border-t pt-4 mt-2">
-              <h4 className="text-sm font-medium mb-3">Add New Category</h4>
-              <div className="grid grid-cols-[1fr,auto,auto] gap-2 items-center">
-                <Select value={newCategory} onValueChange={setNewCategory}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCategories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  value={newAmount}
-                  onChange={(e) => setNewAmount(e.target.value)}
-                  className="w-24 text-right"
-                />
-                <Button 
-                  type="button" 
-                  size="icon" 
-                  onClick={handleAddCategory}
-                  disabled={!newCategory}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Main categories with simplified UI */}
+           <div className="space-y-4">
+             {AVAILABLE_CATEGORIES.map(category => (
+               <div key={category} className="grid grid-cols-2 items-center gap-4">
+                 <div className="flex items-center gap-2">
+                   <div 
+                     className="w-3 h-3 rounded-full" 
+                     style={{ backgroundColor: CATEGORY_COLORS[category] || CATEGORY_COLORS.Other }}
+                   />
+                   <Label htmlFor={`budget-${category}`} className="text-sm">
+                     {category}
+                   </Label>
+                 </div>
+                 <Input
+                   id={`budget-${category}`}
+                   type="number"
+                   min="0"
+                   step="50"
+                   value={editedBudgets[category] || 0}
+                   onChange={(e) => handleInputChange(category, e.target.value)}
+                   className="text-right"
+                   placeholder="0"
+                  />
+               </div>
+             ))}
+          </div>
         </div>
         
         <DialogFooter>
