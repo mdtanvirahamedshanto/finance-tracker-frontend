@@ -7,8 +7,8 @@ const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/logo192.png',
-  '/logo512.png'
+  '/pwa-192x192.svg',
+  '/pwa-512x512.svg'
 ];
 
 // Install event - cache static assets
@@ -301,48 +301,109 @@ async function getAuthToken() {
 // Helper function to open IndexedDB
 function openIndexedDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('FinanceTrackerDB', 1);
-    
-    request.onerror = (event) => {
-      reject('IndexedDB error: ' + event.target.errorCode);
-    };
-    
-    request.onsuccess = (event) => {
-      resolve(event.target.result);
-    };
+    try {
+      // Match the version with the one in indexedDB.ts (version 2)
+      const request = indexedDB.open('FinanceTrackerDB', 2);
+      
+      request.onerror = (event) => {
+        console.error('IndexedDB open error:', event.target.error);
+        reject('IndexedDB error: ' + (event.target.error ? event.target.error.message : 'unknown'));
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        
+        // Create object stores if they don't exist
+        if (!db.objectStoreNames.contains('offlineTransactions')) {
+          db.createObjectStore('offlineTransactions', { keyPath: 'id' });
+        }
+        
+        if (!db.objectStoreNames.contains('offlineBudgets')) {
+          db.createObjectStore('offlineBudgets', { keyPath: 'id' });
+        }
+        
+        if (!db.objectStoreNames.contains('offlineSavingsGoals')) {
+          db.createObjectStore('offlineSavingsGoals', { keyPath: 'id' });
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        resolve(event.target.result);
+      };
+    } catch (error) {
+      console.error('Error opening IndexedDB:', error);
+      reject('Error opening IndexedDB: ' + error.message);
+    }
   });
 }
 
 // Helper function to get offline data from IndexedDB
 function getOfflineData(db, storeName) {
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readonly');
-    const store = transaction.objectStore(storeName);
-    const request = store.getAll();
-    
-    request.onerror = (event) => {
-      reject('Error getting offline data: ' + event.target.errorCode);
-    };
-    
-    request.onsuccess = (event) => {
-      resolve(event.target.result);
-    };
+    try {
+      if (!db) {
+        console.error('DB is undefined in getOfflineData');
+        return resolve([]);
+      }
+      
+      if (!db.objectStoreNames.contains(storeName)) {
+        console.warn(`Object store ${storeName} does not exist yet`);
+        return resolve([]);
+      }
+      
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+      
+      request.onerror = (event) => {
+        console.error(`Error getting offline data from ${storeName}:`, event.target.error);
+        reject('Error getting offline data: ' + (event.target.error ? event.target.error.message : 'unknown'));
+      };
+      
+      request.onsuccess = (event) => {
+        resolve(event.target.result || []);
+      };
+    } catch (error) {
+      console.error(`Error in getOfflineData for ${storeName}:`, error);
+      resolve([]);
+    }
   });
 }
 
 // Helper function to remove offline data from IndexedDB
 function removeOfflineData(db, storeName, id) {
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.delete(id);
-    
-    request.onerror = (event) => {
-      reject('Error removing offline data: ' + event.target.errorCode);
-    };
-    
-    request.onsuccess = (event) => {
+    try {
+      if (!db) {
+        console.error('DB is undefined in removeOfflineData');
+        return resolve();
+      }
+      
+      if (!db.objectStoreNames.contains(storeName)) {
+        console.warn(`Object store ${storeName} does not exist yet`);
+        return resolve();
+      }
+      
+      if (!id) {
+        console.warn(`Attempted to remove item with invalid id: ${id}`);
+        return resolve();
+      }
+      
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.delete(id);
+      
+      request.onerror = (event) => {
+        console.error(`Error removing offline data from ${storeName}:`, event.target.error);
+        reject('Error removing offline data: ' + (event.target.error ? event.target.error.message : 'unknown'));
+      };
+      
+      request.onsuccess = (event) => {
+        resolve();
+      };
+    } catch (error) {
+      console.error(`Error in removeOfflineData for ${storeName}:`, error);
       resolve();
-    };
+    }
   });
 }

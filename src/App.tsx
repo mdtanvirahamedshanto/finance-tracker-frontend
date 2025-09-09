@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Routes, Route, Navigate, createRoutesFromElements } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NetworkProvider } from "./context/NetworkContext";
 import { useEffect } from "react";
@@ -42,25 +42,36 @@ const App = () => {
       });
   }, []);
 
+  // Create router with future flags to address warnings
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Index />
+          </ProtectedRoute>
+        } />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </>
+    ),
+    {
+      future: {
+        v7_normalizeFormMethod: true,
+        v7_relativeSplatPath: true
+      }
+    }
+  );
+
   return (
     <QueryClientProvider client={queryClient}>
       <NetworkProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <RouterProvider router={router} />
         </TooltipProvider>
       </NetworkProvider>
     </QueryClientProvider>

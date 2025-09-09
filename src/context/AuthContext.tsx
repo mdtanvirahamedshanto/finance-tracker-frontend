@@ -36,15 +36,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (storedUser && token) {
         try {
-          // Verify token is valid by fetching user profile
-          const userData = await authAPI.getProfile();
-          setUser({
-            ...JSON.parse(storedUser),
-            ...userData
-          });
+          // Set user from local storage first for offline support
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
           setIsAuthenticated(true);
+          
+          // Then try to verify token if online
+          if (navigator.onLine) {
+            try {
+              const userData = await authAPI.getProfile();
+              setUser({
+                ...parsedUser,
+                ...userData
+              });
+            } catch (error) {
+              console.error('Auth token invalid:', error);
+              // Only clear auth data if we're online and the token is invalid
+              localStorage.removeItem('user');
+              localStorage.removeItem('token');
+              setUser(null);
+              setIsAuthenticated(false);
+            }
+          }
         } catch (error) {
-          console.error('Auth token invalid:', error);
+          console.error('Error parsing stored user data:', error);
           // Clear invalid auth data
           localStorage.removeItem('user');
           localStorage.removeItem('token');
