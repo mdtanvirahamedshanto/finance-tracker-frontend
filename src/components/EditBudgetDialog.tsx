@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,18 +34,11 @@ export function EditBudgetDialog({
   budgetItems, 
   onBudgetsUpdated 
 }: EditBudgetDialogProps) {
-  const [editedBudgets, setEditedBudgets] = useState<Record<string, number>>(() => {
-    const initialBudgets: Record<string, number> = {};
-    budgetItems.forEach(item => {
-      initialBudgets[item.category] = item.budgeted;
-    });
-    return initialBudgets;
-  });
-  
+  const [editedBudgets, setEditedBudgets] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-    useEffect(() => {
+  useEffect(() => {
     if (open) {
       const initialBudgets: Record<string, number> = {};
       budgetItems.forEach(item => {
@@ -58,27 +51,16 @@ export function EditBudgetDialog({
   const handleInputChange = (category: string, value: string) => {
     const amount = parseInt(value, 10);
     if (!isNaN(amount) && amount >= 0) {
-      // Create a new object to hold the updated budgets
-      const newBudgets: Record<string, number> = {};
-      
-      // First, set all other categories to 0
-      budgetItems.forEach(item => {
-        if (item.category !== category) {
-          newBudgets[item.category] = 0;
-        }
-      });
-      
-      // Then, set the value for the selected category
-      newBudgets[category] = amount;
-      
-      setEditedBudgets(newBudgets);
+      setEditedBudgets(prev => ({
+        ...prev,
+        [category]: amount
+      }));
     }
   };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Convert to array format for API
       const budgetsArray = Object.entries(editedBudgets).map(([category, amount]) => ({
         category,
         amount
@@ -132,8 +114,7 @@ export function EditBudgetDialog({
                 type="number"
                 min="0"
                 step="50"
-                // The value of the input should reflect the state
-                value={editedBudgets[item.category] || 0}
+                value={editedBudgets[item.category] || ''}
                 onChange={(e) => handleInputChange(item.category, e.target.value)}
                 className="text-right"
               />
