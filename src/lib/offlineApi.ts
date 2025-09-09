@@ -37,12 +37,12 @@ export const offlineTransactionAPI = {
         return response;
       } else {
         // If offline, get from IndexedDB
-        return await indexedDB.getAllTransactions();
+return (await indexedDB.getAllTransactions()) as Transaction[];
       }
     } catch (error) {
       console.error('Error in getAll transactions:', error);
       // Fallback to IndexedDB if API call fails
-      return await indexedDB.getAllTransactions();
+      return (await indexedDB.getAllTransactions()) as Transaction[];
     }
   },
   
@@ -104,7 +104,11 @@ export const offlineTransactionAPI = {
       };
       
       await indexedDB.updateData('transactions', tempTransaction);
-      await indexedDB.addOfflineTransaction('create', transactionData);
+      // Don't add to offline queue again if we're already offline
+      // This prevents duplicate transactions
+      if (isOnline()) {
+        await indexedDB.addOfflineTransaction('create', transactionData);
+      }
       
       return tempTransaction;
     }
@@ -112,6 +116,11 @@ export const offlineTransactionAPI = {
   
   // Update an existing transaction
   update: async (id: string, transactionData: TransactionUpdateData): Promise<Transaction> => {
+        // Validate ID to prevent undefined ID issues
+    if (!id || id === 'undefined') {
+      throw new Error('Invalid transaction ID');
+    }
+    
     try {
       if (isOnline()) {
         // If online, update via API
@@ -130,9 +139,16 @@ export const offlineTransactionAPI = {
         }
         
         const updatedTransaction: Transaction = {
-          ...existingTransaction,
+          ...(existingTransaction as object),
           ...transactionData,
           updatedAt: new Date().toISOString(),
+          _id: id,
+          createdAt: (existingTransaction as Transaction).createdAt,
+          type: (existingTransaction as Transaction).type,
+          category: (existingTransaction as Transaction).category,
+          amount: (existingTransaction as Transaction).amount,
+          date: (existingTransaction as Transaction).date,
+          description: (existingTransaction as Transaction).description,
         };
         
         // Update local data
@@ -157,16 +173,27 @@ export const offlineTransactionAPI = {
       }
       
       const updatedTransaction: Transaction = {
-        ...existingTransaction,
+        ...(existingTransaction as object),
         ...transactionData,
         updatedAt: new Date().toISOString(),
+        _id: id,
+        createdAt: (existingTransaction as Transaction).createdAt,
+        type: (existingTransaction as Transaction).type,
+        category: (existingTransaction as Transaction).category,
+        amount: (existingTransaction as Transaction).amount,
+        date: (existingTransaction as Transaction).date,
+        description: (existingTransaction as Transaction).description,
       };
       
       await indexedDB.updateData('transactions', updatedTransaction);
-      await indexedDB.addOfflineTransaction('update', {
-        _id: id,
-        ...transactionData,
-      });
+      // Don't add to offline queue again if we're already offline
+      // This prevents duplicate transactions
+      if (isOnline()) {
+        await indexedDB.addOfflineTransaction('update', {
+          _id: id,
+          ...transactionData,
+        });
+      }
       
       return updatedTransaction;
     }
@@ -174,6 +201,11 @@ export const offlineTransactionAPI = {
   
   // Delete a transaction
   delete: async (id: string): Promise<ApiResponse> => {
+    // Validate ID to prevent undefined ID issues
+    if (!id || id === 'undefined') {
+      throw new Error('Invalid transaction ID');
+    }
+    
     try {
       if (isOnline()) {
         // If online, delete via API
@@ -202,11 +234,20 @@ export const offlineTransactionAPI = {
     } catch (error) {
       console.error('Error in delete transaction:', error);
       
-      // Try to delete offline
-      await indexedDB.deleteData('transactions', id);
-      await indexedDB.addOfflineTransaction('delete', { _id: id });
-      
-      return { success: true, message: 'Transaction deleted offline' };
+      try {
+        // Try to delete offline
+        await indexedDB.deleteData('transactions', id);
+        // Don't add to offline queue again if we're already offline
+        // This prevents duplicate transactions
+        if (isOnline()) {
+          await indexedDB.addOfflineTransaction('delete', { _id: id });
+        }
+        
+        return { success: true, message: 'Transaction deleted offline' };
+      } catch (deleteError) {
+        console.error('Error deleting transaction offline:', deleteError);
+        return { success: false, message: 'Failed to delete transaction' };
+      }
     }
   },
   
@@ -258,16 +299,16 @@ export const offlineTransactionAPI = {
         // Calculate summary
         const income = filteredTransactions
           .filter((t: Transaction) => t.type === 'income')
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
         
         const expenses = filteredTransactions
           .filter((t: Transaction) => t.type === 'expense')
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
         
         return {
           income: income as number,
           expenses: expenses as number,
-          balance: income - expenses,
+          balance: (income as number) - (expenses as number), 
         };
       }
     } catch (error) {
@@ -278,11 +319,11 @@ export const offlineTransactionAPI = {
       
       const income = transactions
         .filter((t: Transaction) => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
       
       const expenses = transactions
         .filter((t: Transaction) => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
       
       return {
         income: income as number,
@@ -326,7 +367,7 @@ export const offlineTransactionAPI = {
       const transactions = await indexedDB.getAllTransactions();
       const categoryMap: Record<string, number> = {};
       
-      transactions.forEach(transaction => {
+      transactions.forEach((transaction: Transaction) => {
         if (transaction.type === 'expense') {
           if (!categoryMap[transaction.category]) {
             categoryMap[transaction.category] = 0;
@@ -354,7 +395,7 @@ export const offlineTransactionAPI = {
         // Group by month
         const monthlyData: Record<string, MonthlyTrend> = {};
         
-        transactions.forEach(transaction => {
+        transactions.forEach((transaction: Transaction) => {
           const date = new Date(transaction.date);
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           
@@ -383,7 +424,7 @@ export const offlineTransactionAPI = {
       const transactions = await indexedDB.getAllTransactions();
       const monthlyData: Record<string, MonthlyTrend> = {};
       
-      transactions.forEach(transaction => {
+      transactions.forEach((transaction: Transaction) => {
         const date = new Date(transaction.date);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         
@@ -430,9 +471,19 @@ export const offlineTransactionAPI = {
               await transactionAPI.create(data);
               break;
             case 'update':
+              // Skip if _id is undefined
+              if (!data._id || data._id === 'undefined') {
+                console.warn('Skipping update with invalid ID:', data);
+                break;
+              }
               await transactionAPI.update(data._id, data);
               break;
             case 'delete':
+              // Skip if _id is undefined
+              if (!data._id || data._id === 'undefined') {
+                console.warn('Skipping delete with invalid ID:', data);
+                break;
+              }
               await transactionAPI.delete(data._id);
               break;
           }
@@ -481,12 +532,12 @@ export const offlineBudgetAPI = {
         return response;
       } else {
         // If offline, get from IndexedDB
-        return await indexedDB.getAllBudgets();
+        return await indexedDB.getAllData<Budget>('budgets');
       }
     } catch (error) {
       console.error('Error in getAll budgets:', error);
       // Fallback to IndexedDB
-      return await indexedDB.getAllBudgets();
+      return await indexedDB.getAllData<Budget>('budgets');
     }
   },
   
@@ -503,7 +554,7 @@ export const offlineBudgetAPI = {
         return response;
       } else {
         // If offline, update locally
-        const budgets = await indexedDB.getAllBudgets();
+        const budgets = await indexedDB.getAllData<Budget>('budgets');
         const existingBudget = budgets.find(b => b.category === category);
         
         const updatedBudget: Budget = existingBudget
@@ -528,7 +579,7 @@ export const offlineBudgetAPI = {
       console.error('Error in createOrUpdate budget:', error);
       
       // Try to update offline
-      const budgets = await indexedDB.getAllBudgets();
+      const budgets = await indexedDB.getAllData<Budget>('budgets');
       const existingBudget = budgets.find(b => b.category === category);
       
       const updatedBudget: Budget = existingBudget
@@ -567,7 +618,7 @@ export const offlineBudgetAPI = {
         
         for (const budget of budgets) {
           const { category, amount } = budget;
-          const existingBudgets = await indexedDB.getAllBudgets();
+          const existingBudgets = await indexedDB.getAllData<Budget>('budgets');
           const existingBudget = existingBudgets.find(b => b.category === category);
           
           const updatedBudget: Budget = existingBudget
@@ -598,7 +649,7 @@ export const offlineBudgetAPI = {
       
       for (const budget of budgets) {
         const { category, amount } = budget;
-        const existingBudgets = await indexedDB.getAllBudgets();
+        const existingBudgets = await indexedDB.getAllData<Budget>('budgets');
         const existingBudget = existingBudgets.find(b => b.category === category);
         
         const updatedBudget = existingBudget
@@ -623,6 +674,11 @@ export const offlineBudgetAPI = {
   
   // Delete a budget
   delete: async (id: string): Promise<ApiResponse> => {
+    // Validate ID to prevent undefined ID issues
+    if (!id || id === 'undefined') {
+      throw new Error('Invalid budget ID');
+    }
+    
     try {
       if (isOnline()) {
         // If online, delete via API
@@ -651,11 +707,20 @@ export const offlineBudgetAPI = {
     } catch (error) {
       console.error('Error in delete budget:', error);
       
-      // Try to delete offline
-      await indexedDB.deleteData('budgets', id);
-      await indexedDB.addOfflineBudget('delete', { _id: id });
-      
-      return { success: true, message: 'Budget deleted offline' };
+      try {
+        // Try to delete offline
+        await indexedDB.deleteData('budgets', id);
+        // Don't add to offline queue again if we're already offline
+        // This prevents duplicate entries
+        if (isOnline()) {
+          await indexedDB.addOfflineBudget('delete', { _id: id });
+        }
+        
+        return { success: true, message: 'Budget deleted offline' };
+      } catch (deleteError) {
+        console.error('Error deleting budget offline:', deleteError);
+        return { success: false, message: 'Failed to delete budget' };
+      }
     }
   },
   
@@ -686,6 +751,11 @@ export const offlineBudgetAPI = {
               await budgetAPI.updateBatch(data);
               break;
             case 'delete':
+              // Skip if _id is undefined
+              if (!data._id || data._id === 'undefined') {
+                console.warn('Skipping delete with invalid ID:', data);
+                break;
+              }
               await budgetAPI.delete(data._id);
               break;
           }
@@ -732,12 +802,12 @@ export const offlineSavingsGoalAPI = {
         return response;
       } else {
         // If offline, get from IndexedDB
-        return await indexedDB.getSavingsGoal();
+        return await indexedDB.getDataByKey('savingsGoals', '1');
       }
     } catch (error) {
       console.error('Error in get savings goal:', error);
       // Fallback to IndexedDB
-      return await indexedDB.getSavingsGoal();
+      return await indexedDB.getDataByKey('savingsGoals', '1');
     }
   },
   
@@ -757,7 +827,7 @@ export const offlineSavingsGoalAPI = {
         const existingGoal = await indexedDB.getSavingsGoal();
         
         const updatedGoal: SavingsGoal = existingGoal
-          ? { ...existingGoal, amount }
+          ? { _id: (existingGoal as SavingsGoal)._id, amount: amount, createdAt: (existingGoal as SavingsGoal).createdAt, updatedAt: new Date().toISOString() }
           : { 
               _id: `temp_${Date.now()}`, 
               amount,
@@ -780,7 +850,7 @@ export const offlineSavingsGoalAPI = {
       const existingGoal = await indexedDB.getSavingsGoal();
       
       const updatedGoal: SavingsGoal = existingGoal
-        ? { ...existingGoal, amount }
+        ? { ...existingGoal as SavingsGoal, amount }
         : { 
             _id: `temp_${Date.now()}`, 
             amount,
@@ -814,6 +884,12 @@ export const offlineSavingsGoalAPI = {
         const { data, id } = goal;
         
         try {
+          // Skip if amount is invalid
+          if (data.amount === undefined || isNaN(data.amount)) {
+            console.warn('Skipping update with invalid amount:', data);
+            continue;
+          }
+          
           await savingsGoalAPI.update(data.amount);
           
           // Remove from offline queue after successful sync

@@ -81,7 +81,8 @@ export const AddTransactionDialog = ({ open, onOpenChange, onAddTransaction }: A
   const onSubmit = async (data: TransactionFormData) => {
     try {
       setIsSubmitting(true);
-      await transactionAPI.create(data);
+      // Don't call transactionAPI.create directly here
+      // Instead, let the parent component handle the API call through onAddTransaction
       onAddTransaction(data);
       toast({
         title: "Transaction Added",

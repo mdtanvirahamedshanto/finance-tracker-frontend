@@ -261,7 +261,7 @@ export const TransactionList = ({ transactions: propTransactions }: TransactionL
                       }}>
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                    
                       <DropdownMenuItem 
                         className="text-destructive"
                         onClick={() => {
@@ -284,7 +284,13 @@ export const TransactionList = ({ transactions: propTransactions }: TransactionL
       <AddTransactionDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        onAddTransaction={handleAddTransaction}
+        onAddTransaction={(transaction) => {
+          // Convert Date to string before passing to handleAddTransaction
+          handleAddTransaction({
+            ...transaction,
+            date: transaction.date.toISOString()
+          });
+        }}
       />
 
       {selectedTransaction && (
@@ -292,8 +298,12 @@ export const TransactionList = ({ transactions: propTransactions }: TransactionL
           <EditTransactionDialog
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
-            transaction={selectedTransaction}
-            onEditTransaction={handleEditTransaction}
+            transaction={{...selectedTransaction, id: selectedTransaction._id}}
+            onEditTransaction={(transaction) => handleEditTransaction({ 
+              ...transaction, 
+              _id: selectedTransaction._id,
+              date: transaction.date instanceof Date ? transaction.date.toISOString() : transaction.date 
+            })}
           />
           <DeleteTransactionDialog
             open={isDeleteDialogOpen}

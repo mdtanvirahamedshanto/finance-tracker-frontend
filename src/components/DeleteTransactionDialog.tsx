@@ -32,7 +32,6 @@ export const DeleteTransactionDialog = ({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await transactionAPI.delete(transactionId);
       onOpenChange(false);
       onDeleteTransaction(transactionId);
       toast({
