@@ -14,20 +14,6 @@ import {
 import { budgetAPI } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
-// Available budget categories
-const AVAILABLE_CATEGORIES = ['Housing', 'Utilities', 'Food', 'Transportation', 'Entertainment', 'Shopping', 'Other'];
-
-// Category colors for visual representation
-const CATEGORY_COLORS = {
-  Housing: '#4f46e5',
-  Utilities: '#0ea5e9',
-  Food: '#10b981',
-  Transportation: '#f59e0b',
-  Entertainment: '#8b5cf6',
-  Shopping: '#ec4899',
-  Other: '#6b7280'
-};
-
 interface BudgetItem {
   category: string;
   budgeted: number;
@@ -72,20 +58,10 @@ export function EditBudgetDialog({
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Ensure all categories are included with at least 0 as default value
-      const completeEditedBudgets = { ...editedBudgets };
-      
-      // Add any missing categories with default value of 0
-      AVAILABLE_CATEGORIES.forEach(category => {
-        if (!(category in completeEditedBudgets)) {
-          completeEditedBudgets[category] = 0;
-        }
-      });
-      
-      // Convert to API format
-      const budgetsArray = Object.entries(completeEditedBudgets).map(([category, amount]) => ({
+      // Convert to array format for API
+      const budgetsArray = Object.entries(editedBudgets).map(([category, amount]) => ({
         category,
-        amount: Number(amount) || 0 // Ensure amount is a number and defaults to 0
+        amount
       }));
       
       await budgetAPI.updateBatch(budgetsArray);
@@ -120,36 +96,28 @@ export function EditBudgetDialog({
         </DialogHeader>
         
         <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground mb-2">Enter budget amounts for categories you want to set. Any category without a value will default to 0.</p>
-          </div>
-          
-          {/* Main categories with simplified UI */}
-           <div className="space-y-4">
-             {AVAILABLE_CATEGORIES.map(category => (
-               <div key={category} className="grid grid-cols-2 items-center gap-4">
-                 <div className="flex items-center gap-2">
-                   <div 
-                     className="w-3 h-3 rounded-full" 
-                     style={{ backgroundColor: CATEGORY_COLORS[category] || CATEGORY_COLORS.Other }}
-                   />
-                   <Label htmlFor={`budget-${category}`} className="text-sm">
-                     {category}
-                   </Label>
-                 </div>
-                 <Input
-                   id={`budget-${category}`}
-                   type="number"
-                   min="0"
-                   step="50"
-                   value={editedBudgets[category] || 0}
-                   onChange={(e) => handleInputChange(category, e.target.value)}
-                   className="text-right"
-                   placeholder="0"
-                  />
-               </div>
-             ))}
-          </div>
+          {budgetItems.map((item) => (
+            <div key={item.category} className="grid grid-cols-2 items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: item.color || 'hsl(210, 30%, 60%)' }}
+                />
+                <Label htmlFor={`budget-${item.category}`} className="text-sm">
+                  {item.category}
+                </Label>
+              </div>
+              <Input
+                id={`budget-${item.category}`}
+                type="number"
+                min="0"
+                step="50"
+                value={editedBudgets[item.category]}
+                onChange={(e) => handleInputChange(item.category, e.target.value)}
+                className="text-right"
+              />
+            </div>
+          ))}
         </div>
         
         <DialogFooter>

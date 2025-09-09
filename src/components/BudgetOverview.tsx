@@ -95,9 +95,6 @@ export const BudgetOverview = () => {
       const budgetItems: BudgetItem[] = [];
       
       // Process budgets and add spending data
-      const processedCategories = new Set();
-      
-      // First, add all categories that have budget data
       budgets.forEach((budget: any) => {
         budgetItems.push({
           category: budget.category,
@@ -105,19 +102,6 @@ export const BudgetOverview = () => {
           spent: categorySpending[budget.category] || 0,
           color: CATEGORY_COLORS[budget.category] || CATEGORY_COLORS.Other,
         });
-        processedCategories.add(budget.category);
-      });
-      
-      // Ensure all categories with spending are included
-      Object.keys(categorySpending).forEach(category => {
-        if (!processedCategories.has(category)) {
-          budgetItems.push({
-            category,
-            budgeted: 0, // Default budget of 0 for categories without a budget
-            spent: categorySpending[category],
-            color: CATEGORY_COLORS[category] || CATEGORY_COLORS.Other,
-          });
-        }
       });
       
       setBudgetData(budgetItems);
