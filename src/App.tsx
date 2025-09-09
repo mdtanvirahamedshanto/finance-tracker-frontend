@@ -4,13 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider, Routes, Route, Navigate, createRoutesFromElements } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { NetworkProvider } from "./context/NetworkContext";
-import { useEffect } from "react";
-import { initializeOfflineStorage } from "./lib/offlineApi";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +17,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen"> <Loader2 className="mr-2 h-16 w-16 animate-spin" />.</div>;
   }
   
   if (!isAuthenticated) {
@@ -30,17 +28,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  useEffect(() => {
-    // Initialize IndexedDB for offline storage
-    initializeOfflineStorage()
-      .then(success => {
-        if (success) {
-          console.log('Offline storage initialized successfully');
-        } else {
-          console.error('Failed to initialize offline storage');
-        }
-      });
-  }, []);
 
   // Create router with future flags to address warnings
   const router = createBrowserRouter(
@@ -67,13 +54,11 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NetworkProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <RouterProvider router={router} />
-        </TooltipProvider>
-      </NetworkProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <RouterProvider router={router} />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

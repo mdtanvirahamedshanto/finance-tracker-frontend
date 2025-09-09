@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { budgetAPI, transactionAPI } from '@/lib/api';
 import { EditBudgetDialog } from './EditBudgetDialog';
 
@@ -120,7 +121,7 @@ export const BudgetOverview = () => {
 
   return (
     <>
-      <Card>
+      <Card className="block w-full">
         <CardHeader className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -137,7 +138,7 @@ export const BudgetOverview = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
+                  <Skeleton className="h-4 w-16 inline-block" />
                 </>
               ) : (
                 'Edit Budget'
@@ -147,7 +148,40 @@ export const BudgetOverview = () => {
         </CardHeader>
         <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {loading ? (
-            <div className="text-center py-4">Loading budget data...</div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <Skeleton className="h-2 sm:h-3 w-full" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-32" />
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-1">
+                        <Skeleton className="w-3 h-3 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-5 w-12 rounded-full" />
+                      </div>
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                    <Skeleton className="h-2 w-full" />
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : error ? (
             <div className="text-center py-4">
               <div className="text-destructive mb-4">{error}</div>

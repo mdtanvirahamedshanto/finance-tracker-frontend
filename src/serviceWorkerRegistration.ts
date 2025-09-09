@@ -29,14 +29,9 @@ export function register(config?: Config): void {
       }
     });
 
-    // Add event listener for online/offline status changes
+    // Only keep online status event listener for UI updates
     window.addEventListener('online', () => {
       document.dispatchEvent(new CustomEvent('app-online'));
-      triggerBackgroundSync();
-    });
-
-    window.addEventListener('offline', () => {
-      document.dispatchEvent(new CustomEvent('app-offline'));
     });
   }
 }
@@ -122,32 +117,16 @@ export function unregister(): void {
   }
 }
 
-// Trigger background sync for offline data
+// Trigger background sync function - kept for compatibility but disabled offline functionality
 export function triggerBackgroundSync(): void {
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready
-      .then((registration) => {
-        // Register sync for different data types
-        (registration as any).sync.register('sync-transactions')
-          .catch(err => console.warn('Sync registration failed for transactions:', err));
-        (registration as any).sync.register('sync-budgets')
-          .catch(err => console.warn('Sync registration failed for budgets:', err));
-        (registration as any).sync.register('sync-savings')
-          .catch(err => console.warn('Sync registration failed for savings:', err));
-      })
-      .catch((err) => {
-        console.error('Background sync registration failed:', err);
-        // Dispatch event to notify app that background sync is not available
-        document.dispatchEvent(new CustomEvent('sync-fallback-needed'));
-      });
-  } else {
-    console.warn('Background Sync is not supported in this browser');
-    // Dispatch event to notify app that background sync is not available
-    document.dispatchEvent(new CustomEvent('sync-fallback-needed'));
-  }
+  // Function kept for API compatibility but offline sync functionality is disabled
+  console.log('Background sync functionality has been disabled');
+  
+  // Dispatch event to notify app that sync is complete immediately
+  document.dispatchEvent(new CustomEvent('sync-complete'));
 }
 
-// Check if the app is online
+// Check if the app is online - always returns true since offline support is removed
 export function isOnline(): boolean {
-  return navigator.onLine;
+  return true; // Always return true as offline support is removed
 }

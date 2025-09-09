@@ -8,19 +8,42 @@
     <meta name="mdtanvirahamedshanto" content="Shanto" />
     <meta name="theme-color" content="#22c55e" />
     <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/src/index.css" as="style">
+    <link rel="preload" href="/src/main.tsx" as="script">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
+    <!-- Open Graph -->
     <meta property="og:title" content="Personal Finance Tracker" />
-    <meta property="og:description" content="personal finance tracker" />
+    <meta property="og:description" content="Track your personal finances, budgets, and savings goals" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="" />
+    <meta property="og:image" content="/pwa-512x512.png" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@tashanto_03" />
-    <meta name="twitter:image" content="" />
+    <meta name="twitter:image" content="/pwa-512x512.png" />
+    
+    <!-- Performance optimizations -->
+    <link rel="dns-prefetch" href="/api">
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Inline critical CSS to avoid render blocking -->
+    <script>
+      // This helps with Flash of Unstyled Content (FOUC)
+      document.documentElement.classList.add('js-loading');
+      window.addEventListener('DOMContentLoaded', function() {
+        document.documentElement.classList.remove('js-loading');
+      });
+    </script>
   </body>
 </html>

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { DateRange } from 'react-day-picker';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Target, CreditCard, PiggyBank, LogOut, Download, User, Settings, Loader2 } from 'lucide-react';
-import { NetworkStatus } from '@/components/NetworkStatus';
 import { transactionAPI,authAPI } from '@/lib/api.js';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,14 +15,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AddTransactionDialog } from '@/components/AddTransactionDialog';
-import { ProfileSettings } from '@/components/ProfileSettings';
-import { TransactionList } from '@/components/TransactionList';
-import { SpendingChart } from '@/components/SpendingChart';
-import { BudgetOverview } from '@/components/BudgetOverview';
-import { SavingsGoalCard } from '@/components/SavingsGoalCard';
-import { QuickStats } from '@/components/QuickStats';
 import { TimePeriodSelector } from '@/components/TimePeriodSelector';
+
+// Lazy load components for better performance
+const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog').then(module => ({ default: module.AddTransactionDialog })));
+const ProfileSettings = lazy(() => import('@/components/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
+const TransactionList = lazy(() => import('@/components/TransactionList').then(module => ({ default: module.TransactionList })));
+const SpendingChart = lazy(() => import('@/components/SpendingChart').then(module => ({ default: module.SpendingChart })));
+const BudgetOverview = lazy(() => import('@/components/BudgetOverview').then(module => ({ default: module.BudgetOverview })));
+const SavingsGoalCard = lazy(() => import('@/components/SavingsGoalCard').then(module => ({ default: module.SavingsGoalCard })));
+const QuickStats = lazy(() => import('@/components/QuickStats').then(module => ({ default: module.QuickStats })));
 
 // Define types for our financial data
 interface FinancialSummary {
@@ -247,7 +249,6 @@ const Index = () => {
               <h1 className="text-lg sm:text-xl font-semibold text-foreground">FinanceTracker</h1>
             </div>
             <div className="flex items-center gap-2">
-              <NetworkStatus className="hidden md:flex mr-2" />
               <div className="hidden sm:block">
                 <TimePeriodSelector 
                   selectedPeriod={selectedPeriod}
@@ -363,25 +364,58 @@ const Index = () => {
         </div>
 
         {/* Quick Stats & Goals */}
-        <QuickStats 
-          savingsGoal={savingsGoal}
-          currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0}
-          selectedPeriod={selectedPeriod}
-          dateRange={dateRange}
-          transactions={transactions}
-        />
+        <Suspense fallback={<div className="p-4 text-center">Loading stats...</div>}>
+          <QuickStats 
+            savingsGoal={savingsGoal}
+            currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0}
+            selectedPeriod={selectedPeriod}
+            dateRange={dateRange}
+            transactions={transactions}
+          />
+        </Suspense>
 
         {/* Charts & Budget Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <Suspense fallback={<div className="p-4 text-center">Loading chart...</div>}>
             <SpendingChart propTransactions={transactions} />
-            <div className="space-y-4 sm:space-y-6">
-              <BudgetOverview />
+          </Suspense>
+          <div className="space-y-4 sm:space-y-6 block">
+            <div className="hidden sm:block">
+              <Suspense fallback={
+                <Card className="block w-full">
+                  <CardHeader className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        Budget Overview
+                      </CardTitle>
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-4 w-32" />
+                        </div>
+                        <Skeleton className="h-2 sm:h-3 w-full" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              }>
+                <BudgetOverview />
+              </Suspense>
+            </div>
+            <Suspense fallback={<div className="p-4 text-center">Loading savings goal...</div>}>
               <SavingsGoalCard 
                 currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0} 
                 initialGoal={savingsGoal}
               />
-            </div>
+            </Suspense>
           </div>
+        </div>
 
         {/* Transactions */}
         <Card>
@@ -401,13 +435,19 @@ const Index = () => {
                 <TabsTrigger value="expenses" className="flex-1 sm:flex-none">Expenses</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
-                <TransactionList transactions={transactions} />
+                <Suspense fallback={<div className="p-4 text-center">Loading transactions...</div>}>
+                  <TransactionList transactions={transactions} />
+                </Suspense>
               </TabsContent>
               <TabsContent value="income">
-                <TransactionList transactions={transactions.filter(t => t.type === 'income')} />
+                <Suspense fallback={<div className="p-4 text-center">Loading transactions...</div>}>
+                  <TransactionList transactions={transactions.filter(t => t.type === 'income')} />
+                </Suspense>
               </TabsContent>
               <TabsContent value="expenses">
-                <TransactionList transactions={transactions.filter(t => t.type === 'expense')} />
+                <Suspense fallback={<div className="p-4 text-center">Loading transactions...</div>}>
+                  <TransactionList transactions={transactions.filter(t => t.type === 'expense')} />
+                </Suspense>
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -415,30 +455,34 @@ const Index = () => {
       </main>
 
       {/* Add Transaction Dialog */}
-      <AddTransactionDialog 
-        open={isAddTransactionOpen}
-        onOpenChange={setIsAddTransactionOpen}
-        onAddTransaction={async (transactionData) => {
-          try {
-            await transactionAPI.create(transactionData);
-            // Refresh data after adding a transaction
-            const summaryData = await transactionAPI.getSummary();
-            setFinancialSummary(summaryData);
-            
-            const transactionsData = await transactionAPI.getAll();
-            setTransactions(transactionsData);
-            
-            setIsAddTransactionOpen(false);
-          } catch (error) {
-            console.error('Error adding transaction:', error);
-          }
-        }}
-      />
+      <Suspense fallback={null}>
+        <AddTransactionDialog 
+          open={isAddTransactionOpen}
+          onOpenChange={setIsAddTransactionOpen}
+          onAddTransaction={async (transactionData) => {
+            try {
+              await transactionAPI.create(transactionData);
+              // Refresh data after adding a transaction
+              const summaryData = await transactionAPI.getSummary();
+              setFinancialSummary(summaryData);
+              
+              const transactionsData = await transactionAPI.getAll();
+              setTransactions(transactionsData);
+              
+              setIsAddTransactionOpen(false);
+            } catch (error) {
+              console.error('Error adding transaction:', error);
+            }
+          }}
+        />
+      </Suspense>
       
-      <ProfileSettings
-        open={isProfileSettingsOpen}
-        onOpenChange={setIsProfileSettingsOpen}
-      />
+      <Suspense fallback={null}>
+        <ProfileSettings
+          open={isProfileSettingsOpen}
+          onOpenChange={setIsProfileSettingsOpen}
+        />
+      </Suspense>
     </div>
   );
 };

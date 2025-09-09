@@ -119,10 +119,8 @@ This application is ready to be deployed on Vercel. For detailed deployment inst
 
 ## 📱 Progressive Web App (PWA) Features
 
-- ✅ **Offline Mode**: Full functionality when offline with data synchronization when back online
 - ✅ **Installable**: Can be installed on mobile and desktop devices
 - ✅ **Responsive Design**: Optimized for all screen sizes
-- ✅ **Background Sync**: Queues transactions when offline and syncs when online
 - ✅ **Push Notifications**: (Partial) Basic notification support
 
 ## 🧪 Development

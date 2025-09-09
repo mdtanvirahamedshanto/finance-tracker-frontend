@@ -14,6 +14,22 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
     },
+    build: {
+      // Optimize build for production
+      target: 'esnext',
+      minify: 'terser',
+      cssMinify: true,
+      reportCompressedSize: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            ui: ['@/components/ui'],
+            charts: ['chart.js', 'react-chartjs-2'],
+          },
+        },
+      },
+    },
     plugins: [
       react(),
       mode === "development" && componentTagger(),
