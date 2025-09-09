@@ -1,14 +1,31 @@
-# 🌟 Personal Finance Tracker - Complete Feature List
+# 🌟 Personal Finance Tracker - Frontend
+
+A modern, responsive web application for personal finance management with offline capabilities. This application is built with React, TypeScript, and Vite, featuring a clean UI with Tailwind CSS and Shadcn UI components.
 
 ## 🚀 Deployment
 
 This application is ready to be deployed on Vercel. For detailed deployment instructions, please refer to the [Vercel Deployment Guide](./VERCEL_DEPLOYMENT.md).
 
+## 🛠️ Tech Stack
+
+- **React** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool and development server
+- **React Router** - Client-side routing
+- **React Query** - Data fetching and state management
+- **Tailwind CSS** - Utility-first CSS framework
+- **Shadcn UI** - Component library
+- **Axios** - HTTP client
+- **React Hook Form** - Form handling
+- **Zod** - Schema validation
+- **PWA Support** - Progressive Web App capabilities
+- **IndexedDB** - Offline data storage
+
 ## 📊 Core Financial Management
 
 ### 💰 Balance Overview
-- **Real-time Balance Display**: Current account balance with visual indicators
-- **Growth Tracking**: Percentage change from previous month
+- ✅ **Real-time Balance Display**: Current account balance with visual indicators
+- ✅ **Growth Tracking**: Percentage change from previous month
 - **Multiple Account Support**: (Future) Track checking, savings, credit cards
 - **Net Worth Calculation**: (Future) Total assets minus liabilities
 
@@ -91,13 +108,60 @@ This application is ready to be deployed on Vercel. For detailed deployment inst
 ### 🔒 Data Security & Privacy
 - ✅ **Client-side Validation**: Form validation with Zod schemas
 - ✅ **Type Safety**: Full TypeScript implementation
+- ✅ **JWT Authentication**: Secure token-based authentication
 - 🔐 **Encryption**: (Future) End-to-end data encryption
-- 🔑 **Authentication**: (Future) Secure user accounts with 2FA
+- 🔑 **2FA**: (Future) Two-factor authentication
 - 🛡️ **Data Backup**: (Future) Automatic cloud backups
 - 📋 **Privacy Controls**: (Future) Granular data sharing permissions
 
 ### 📤 Import & Export
 - 📊 **CSV Export**: (Future) Export transactions and reports
+
+## 📱 Progressive Web App (PWA) Features
+
+- ✅ **Offline Mode**: Full functionality when offline with data synchronization when back online
+- ✅ **Installable**: Can be installed on mobile and desktop devices
+- ✅ **Responsive Design**: Optimized for all screen sizes
+- ✅ **Background Sync**: Queues transactions when offline and syncs when online
+- ✅ **Push Notifications**: (Partial) Basic notification support
+
+## 🧪 Development
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+4. Update the `.env` file with your backend API URL
+
+### Running the Development Server
+
+```bash
+npm run dev
+```
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
 - 📄 **PDF Reports**: (Future) Generate printable financial reports
 - 💾 **Data Backup**: (Future) Complete account data export
 - 📥 **Bank Integration**: (Future) Direct bank account synchronization

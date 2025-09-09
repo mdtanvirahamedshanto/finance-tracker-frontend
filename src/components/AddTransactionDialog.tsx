@@ -51,7 +51,7 @@ const transactionSchema = z.object({
 type TransactionFormData = z.infer<typeof transactionSchema>;
 
 const categories = {
-  income: ['Salary', 'Freelance', 'Investment', 'Business', 'Gift', 'Other Income'],
+  income: ['Salary', 'Freelance','Familly', 'Investment','Loan','Side Hustle', 'Business', 'Gift', 'Other Income'],
   expense: ['Food & Dining', 'Transportation', 'Shopping', 'Entertainment', 'Bills & Utilities', 'Healthcare', 'Education', 'Travel', 'Other']
 };
 

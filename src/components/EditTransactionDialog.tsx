@@ -232,6 +232,10 @@ export const EditTransactionDialog = ({
                         <SelectItem value="Utilities">Utilities</SelectItem>
                         <SelectItem value="Healthcare">Healthcare</SelectItem>
                         <SelectItem value="Salary">Salary</SelectItem>
+                        <SelectItem value="Freelance">Freelance</SelectItem>
+                        <SelectItem value="Familly">Familly</SelectItem>
+                        <SelectItem value="Side Hustle">Side Hustle</SelectItem>
+                        <SelectItem value="Loan">Loan</SelectItem>
                         <SelectItem value="Investment">Investment</SelectItem>
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
