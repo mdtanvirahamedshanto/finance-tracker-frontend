@@ -155,21 +155,21 @@ async function syncTransactions() {
         // Handle different CRUD operations
         switch (action) {
           case 'create':
-            response = await fetch('http://localhost:5000/api/transactions', {
+            response = await fetch('https://finance-tracker-backend-livid.vercel.app/api/transactions', {
               method: 'POST',
               headers,
               body: JSON.stringify(data)
             });
             break;
           case 'update':
-            response = await fetch(`http://localhost:5000/api/transactions/${data._id}`, {
+            response = await fetch(`https://finance-tracker-backend-livid.vercel.app/api/transactions/${data._id}`, {
               method: 'PUT',
               headers,
               body: JSON.stringify(data)
             });
             break;
           case 'delete':
-            response = await fetch(`http://localhost:5000/api/transactions/${data._id}`, {
+            response = await fetch(`https://finance-tracker-backend-livid.vercel.app/api/transactions/${data._id}`, {
               method: 'DELETE',
               headers
             });
@@ -215,21 +215,21 @@ async function syncBudgets() {
         // Handle different CRUD operations
         switch (action) {
           case 'update':
-            response = await fetch('http://localhost:5000/api/budget', {
+            response = await fetch('https://finance-tracker-backend-livid.vercel.app/api/budget', {
               method: 'POST',
               headers,
               body: JSON.stringify(data)
             });
             break;
           case 'updateBatch':
-            response = await fetch('http://localhost:5000/api/budget/batch', {
+            response = await fetch('https://finance-tracker-backend-livid.vercel.app/api/budget/batch', {
               method: 'PUT',
               headers,
               body: JSON.stringify({ budgets: data })
             });
             break;
           case 'delete':
-            response = await fetch(`http://localhost:5000/api/budget/${data._id}`, {
+            response = await fetch(`https://finance-tracker-backend-livid.vercel.app/api/budget/${data._id}`, {
               method: 'DELETE',
               headers
             });
@@ -266,7 +266,7 @@ async function syncSavingsGoals() {
           return;
         }
         
-        const response = await fetch('http://localhost:5000/api/savings-goal', {
+        const response = await fetch('https://finance-tracker-backend-livid.vercel.app/api/savings-goal', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

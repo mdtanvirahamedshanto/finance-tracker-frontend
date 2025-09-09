@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use environment variables with fallback for local development
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://finance-tracker-backend-livid.vercel.app';
 
 // Create axios instance
 const api = axios.create({
