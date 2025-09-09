@@ -213,11 +213,79 @@ const Index = () => {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Loading your dashboard</h2>
-          <p className="text-muted-foreground">Please wait while we fetch your financial data...</p>
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="container mx-auto space-y-4 sm:space-y-6">
+          {/* Skeleton Header */}
+          <div className="flex items-center justify-between py-4 border-b border-border/50">
+            <div className="flex items-center space-x-2">
+              <Skeleton className="w-8 h-8 rounded-lg" />
+              <Skeleton className="w-32 h-6" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-24 h-10 rounded-md hidden sm:block" />
+              <Skeleton className="w-10 h-10 rounded-md sm:w-32" />
+              <Skeleton className="w-10 h-10 rounded-full" />
+            </div>
+          </div>
+          
+          {/* Skeleton Balance Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-4 rounded-full" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-32 mb-2" />
+                  <Skeleton className="h-3 w-20" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {/* Skeleton Stats */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          
+          {/* Skeleton Charts & Budget */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent className="h-[300px] flex items-center justify-center">
+                <Skeleton className="h-full w-full rounded-md" />
+              </CardContent>
+            </Card>
+            
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -364,7 +432,22 @@ const Index = () => {
         </div>
 
         {/* Quick Stats & Goals */}
-        <Suspense fallback={<div className="p-4 text-center">Loading stats...</div>}>
+        <Suspense fallback={
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        }>
           <QuickStats 
             savingsGoal={savingsGoal}
             currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0}
@@ -376,7 +459,16 @@ const Index = () => {
 
         {/* Charts & Budget Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <Suspense fallback={<div className="p-4 text-center">Loading chart...</div>}>
+          <Suspense fallback={
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent className="h-[300px] flex items-center justify-center">
+                <Skeleton className="h-full w-full rounded-md" />
+              </CardContent>
+            </Card>
+          }>
             <SpendingChart propTransactions={transactions} />
           </Suspense>
           <div className="space-y-4 sm:space-y-6 block">
@@ -408,7 +500,23 @@ const Index = () => {
                 <BudgetOverview />
               </Suspense>
             </div>
-            <Suspense fallback={<div className="p-4 text-center">Loading savings goal...</div>}>
+            <Suspense fallback={
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
+            }>
               <SavingsGoalCard 
                 currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0} 
                 initialGoal={savingsGoal}
@@ -435,17 +543,62 @@ const Index = () => {
                 <TabsTrigger value="expenses" className="flex-1 sm:flex-none">Expenses</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
-                <Suspense fallback={<div className="p-4 text-center">Loading transactions...</div>}>
+                <Suspense fallback={
+                  <div className="space-y-2 p-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex items-center justify-between p-3 border-b border-border/50">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-10 w-10 rounded-full" />
+                          <div>
+                            <Skeleton className="h-4 w-32 mb-1" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                    ))}
+                  </div>
+                }>
                   <TransactionList transactions={transactions} />
                 </Suspense>
               </TabsContent>
               <TabsContent value="income">
-                <Suspense fallback={<div className="p-4 text-center">Loading transactions...</div>}>
+                <Suspense fallback={
+                  <div className="space-y-2 p-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center justify-between p-3 border-b border-border/50">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-10 w-10 rounded-full" />
+                          <div>
+                            <Skeleton className="h-4 w-32 mb-1" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                    ))}
+                  </div>
+                }>
                   <TransactionList transactions={transactions.filter(t => t.type === 'income')} />
                 </Suspense>
               </TabsContent>
               <TabsContent value="expenses">
-                <Suspense fallback={<div className="p-4 text-center">Loading transactions...</div>}>
+                <Suspense fallback={
+                  <div className="space-y-2 p-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center justify-between p-3 border-b border-border/50">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-10 w-10 rounded-full" />
+                          <div>
+                            <Skeleton className="h-4 w-32 mb-1" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                    ))}
+                  </div>
+                }>
                   <TransactionList transactions={transactions.filter(t => t.type === 'expense')} />
                 </Suspense>
               </TabsContent>
