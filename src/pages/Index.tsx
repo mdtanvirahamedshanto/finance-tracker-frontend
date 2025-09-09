@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Target, CreditCard, PiggyBank, LogOut, Download, User } from 'lucide-react';
-import { transactionAPI, authAPI } from '@/lib/api.js';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Target, CreditCard, PiggyBank, LogOut, Download, User, Settings, Loader2 } from 'lucide-react';
+import { transactionAPI } from '@/lib/api.js';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +14,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
+import { ProfileSettings } from '@/components/ProfileSettings';
 import { TransactionList } from '@/components/TransactionList';
 import { SpendingChart } from '@/components/SpendingChart';
 import { BudgetOverview } from '@/components/BudgetOverview';
+import { SavingsGoalCard } from '@/components/SavingsGoalCard';
 import { QuickStats } from '@/components/QuickStats';
 import { TimePeriodSelector } from '@/components/TimePeriodSelector';
 
@@ -54,17 +57,116 @@ const defaultFinancialData = {
 
 const Index = () => {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
+  const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({ income: 0, expenses: 0, balance: 0 });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [savingsGoal, setSavingsGoal] = useState(10000); // Default savings goal
+  const [error, setError] = useState<string | null>(null);
   
+  const { user } = useAuth();
+
   // Fetch financial summary and transactions
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      setError(null);
+      try {
+        // Fetch financial summary
+        const summaryData = await transactionAPI.getSummary();
+        setFinancialSummary(summaryData);
+        
+        // Fetch transactions
+        const transactionsData = await transactionAPI.getAll();
+        setTransactions(transactionsData);
+        
+        // Set user profile from AuthContext
+        if (user) {
+          setUserProfile({
+            _id: user.id,
+            name: user.name,
+            email: user.email
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load dashboard data. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [user]);
+  
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    // No need to manually redirect as this will be handled by the AuthContext
+  };
+  
+  const handleExportData = (format: 'json' | 'csv' = 'json') => {
+    if (!transactions || transactions.length === 0) {
+      return;
+    }
+    
+    let data: string;
+    let mimeType: string;
+    let fileExtension: string;
+    
+    if (format === 'csv') {
+      // Create CSV header
+      const headers = ['ID', 'Description', 'Amount', 'Category', 'Date', 'Type', 'Notes'];
+      
+      // Create CSV rows
+      const rows = transactions.map(t => [
+        t._id,
+        t.description,
+        t.amount.toString(),
+        t.category,
+        t.date,
+        t.type,
+        t.notes || ''
+      ]);
+      
+      // Combine header and rows
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.join(','))
+      ].join('\n');
+      
+      data = csvContent;
+      mimeType = 'text/csv';
+      fileExtension = 'csv';
+    } else {
+      // JSON format
+      data = JSON.stringify(transactions, null, 2);
+      mimeType = 'application/json';
+      fileExtension = 'json';
+    }
+    
+    const blob = new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const date = new Date().toISOString().split('T')[0];
+    link.download = `finance-data-${date}.${fileExtension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+  };
+  
+  // Function to retry loading data
+  const retryLoading = () => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         // Fetch financial summary
         const summaryData = await transactionAPI.getSummary();
@@ -83,44 +185,41 @@ const Index = () => {
         localStorage.setItem('email', profileData.email);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError('Failed to load dashboard data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchData();
-  }, []);
-  
-  const handleLogout = () => {
-    // Clear local storage
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    localStorage.removeItem('email');
-    
-    // Redirect to login page
-    window.location.href = '/login';
   };
-  
-  const handleExportData = () => {
-    // Get transactions data
-    const transactionsData = JSON.stringify(mockData.recentTransactions, null, 2);
-    
-    // Create a blob and download link
-    const blob = new Blob([transactionsData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `finance-data-${new Date().toISOString().split('T')[0]}.json`;
-    
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up
-    URL.revokeObjectURL(url);
-  };
-  
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Loading your dashboard</h2>
+          <p className="text-muted-foreground">Please wait while we fetch your financial data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-destructive text-lg mb-4">{error}</div>
+          <p className="text-muted-foreground mb-6">We encountered an error while loading your dashboard data.</p>
+          <Button onClick={retryLoading}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -156,23 +255,29 @@ const Index = () => {
                     <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
                       <span className="sr-only">Open profile menu</span>
                       <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                        {localStorage.getItem('username')?.charAt(0).toUpperCase() || 'U'}
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuItem className="cursor-default">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{localStorage.getItem('username') || 'User'}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{localStorage.getItem('email') || 'user@example.com'}</p>
+                        <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user?.email || 'user@example.com'}</p>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsProfileSettingsOpen(true)}>
+                      <Settings className="mr-2 h-4 w-4" />
                       Profile Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExportData()}>
-                      Export Data
+                    <DropdownMenuItem onClick={() => handleExportData('json')}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export as JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportData('csv')}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export as CSV
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => handleLogout()} className="text-destructive">
@@ -240,17 +345,23 @@ const Index = () => {
 
         {/* Quick Stats & Goals */}
         <QuickStats 
-          savingsGoal={mockData.savingsGoal}
-          currentSavings={mockData.currentSavings}
+          savingsGoal={savingsGoal}
+          currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0}
           selectedPeriod={selectedPeriod}
-          transactions={mockData.recentTransactions}
+          transactions={transactions}
         />
 
         {/* Charts & Budget Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <SpendingChart transactions={mockData.recentTransactions} />
-          <BudgetOverview />
-        </div>
+            <SpendingChart propTransactions={transactions} />
+            <div className="space-y-4 sm:space-y-6">
+              <BudgetOverview />
+              <SavingsGoalCard 
+                currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0} 
+                initialGoal={savingsGoal}
+              />
+            </div>
+          </div>
 
         {/* Transactions */}
         <Card>
@@ -258,7 +369,7 @@ const Index = () => {
             <CardTitle className="flex items-center justify-between">
               <span>Transactions</span>
               <Badge variant="secondary">
-                {mockData.recentTransactions.length} transactions
+                {transactions.length} transactions
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -273,10 +384,10 @@ const Index = () => {
                 <TransactionList transactions={transactions} />
               </TabsContent>
               <TabsContent value="income">
-                <TransactionList transactions={mockData.recentTransactions.filter(t => t.type === 'income')} />
+                <TransactionList transactions={transactions.filter(t => t.type === 'income')} />
               </TabsContent>
               <TabsContent value="expenses">
-                <TransactionList transactions={mockData.recentTransactions.filter(t => t.type === 'expense')} />
+                <TransactionList transactions={transactions.filter(t => t.type === 'expense')} />
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -302,6 +413,11 @@ const Index = () => {
             console.error('Error adding transaction:', error);
           }
         }}
+      />
+      
+      <ProfileSettings
+        open={isProfileSettingsOpen}
+        onOpenChange={setIsProfileSettingsOpen}
       />
     </div>
   );

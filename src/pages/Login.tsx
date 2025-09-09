@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { authAPI } from '@/lib/api.js';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -25,9 +24,9 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -38,22 +37,17 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
     try {
-      await authAPI.login(data);
-      toast({
-        title: 'Success',
-        description: 'You have been logged in successfully',
-      });
-      navigate('/');
+      const success = await login(data.email, data.password);
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'You have been logged in successfully',
+        });
+        navigate('/');
+      }
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to login',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      // Error is handled in the AuthContext
     }
   };
 

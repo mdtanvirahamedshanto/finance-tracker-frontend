@@ -8,12 +8,13 @@ interface QuickStatsProps {
   currentSavings: number;
   selectedPeriod: 'week' | 'month' | 'year';
   transactions: Array<{
-    id: string;
+    _id: string;
     description: string;
     amount: number;
     category: string;
     date: string;
     type: 'income' | 'expense';
+    notes?: string;
   }>;
 }
 

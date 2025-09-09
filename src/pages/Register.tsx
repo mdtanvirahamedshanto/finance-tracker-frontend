@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { authAPI } from '@/lib/api.js';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -30,9 +29,9 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const Register = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { register, isLoading } = useAuth();
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -45,23 +44,18 @@ const Register = () => {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
     try {
       const { name, email, password } = data;
-      await authAPI.register({ name, email, password });
-      toast({
-        title: 'Success',
-        description: 'Account created successfully',
-      });
-      navigate('/');
+      const success = await register(name, email, password);
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Account created successfully',
+        });
+        navigate('/');
+      }
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to register',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      // Error is handled in the AuthContext
     }
   };
 

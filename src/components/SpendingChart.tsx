@@ -1,21 +1,49 @@
+import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingDown } from 'lucide-react';
+import { TrendingDown, Loader2 } from 'lucide-react';
+import { transactionAPI } from '@/lib/api';
 
 interface Transaction {
-  id: string;
+  _id: string;
   description: string;
   amount: number;
   category: string;
   date: string;
   type: 'income' | 'expense';
+  notes?: string;
 }
 
 interface SpendingChartProps {
-  transactions: Transaction[];
+  propTransactions?: Transaction[];
 }
 
-export const SpendingChart = ({ transactions }: SpendingChartProps) => {
+export const SpendingChart = ({ propTransactions }: SpendingChartProps) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (propTransactions && propTransactions.length > 0) {
+      setTransactions(propTransactions);
+    } else {
+      fetchTransactions();
+    }
+  }, [propTransactions]);
+  
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await transactionAPI.getAll();
+      setTransactions(response.data);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      setError('Failed to fetch expense data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
   // Process transactions to get spending by category
   const expenseTransactions = transactions.filter(t => t.type === 'expense');
   
@@ -58,6 +86,53 @@ export const SpendingChart = ({ transactions }: SpendingChartProps) => {
     return null;
   };
 
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingDown className="h-5 w-5 text-muted-foreground" />
+            Spending by Category
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 sm:p-8">
+          <div className="h-[250px] sm:h-[300px] flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <Loader2 className="h-12 w-12 mx-auto mb-2 opacity-50 animate-spin" />
+              <p>Loading expense data...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingDown className="h-5 w-5 text-muted-foreground" />
+            Spending by Category
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 sm:p-8">
+          <div className="h-[250px] sm:h-[300px] flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <div className="text-destructive mb-4">{error}</div>
+              <button 
+                className="px-4 py-2 border border-border rounded-md hover:bg-accent text-sm font-medium"
+                onClick={fetchTransactions}
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   if (chartData.length === 0) {
     return (
       <Card>

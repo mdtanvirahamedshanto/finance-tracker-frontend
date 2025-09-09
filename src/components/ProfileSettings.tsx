@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { authAPI } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface UserProfile {
   _id: string;
@@ -25,45 +25,49 @@ export function ProfileSettings({ open, onOpenChange }: ProfileSettingsProps) {
   const [savingsGoal, setSavingsGoal] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (open) {
-      const fetchProfile = async () => {
-        setLoading(true);
-        try {
-          const data = await authAPI.getProfile();
-          setProfile(data);
-          setName(data.name);
-          setEmail(data.email);
-          
-          // Get savings goal from localStorage if available
-          const savedGoal = localStorage.getItem('savingsGoal');
-          if (savedGoal) {
-            setSavingsGoal(savedGoal);
-          } else {
-            setSavingsGoal('10000'); // Default value
-          }
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load profile data',
-            variant: 'destructive',
-          });
-        } finally {
-          setLoading(false);
-        }
-      };
+  const { user } = useAuth();
 
-      fetchProfile();
+  useEffect(() => {
+    if (open && user) {
+      setLoading(true);
+      try {
+        setProfile({
+          _id: user.id,
+          name: user.name,
+          email: user.email
+        });
+        setName(user.name);
+        setEmail(user.email);
+        
+        // Get savings goal from localStorage if available
+        const savedGoal = localStorage.getItem('savingsGoal');
+        if (savedGoal) {
+          setSavingsGoal(savedGoal);
+        } else {
+          setSavingsGoal('10000'); // Default value
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load profile data',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   }, [open, toast]);
 
+  const { updateProfile } = useAuth();
+
   const handleSave = async () => {
+    setLoading(true);
     try {
-      // For now, just update localStorage since we don't have a backend endpoint
-      // In a real app, you would call an API to update the user profile
-      localStorage.setItem('username', name);
-      localStorage.setItem('email', email);
+      // Update user profile through AuthContext
+      await updateProfile({ name, email });
+      
+      // Still store savings goal in localStorage as it's not part of the user profile in the backend
       localStorage.setItem('savingsGoal', savingsGoal);
       
       toast({
@@ -78,6 +82,8 @@ export function ProfileSettings({ open, onOpenChange }: ProfileSettingsProps) {
         description: 'Failed to update profile settings',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5000';
 
 // Create axios instance
 const api = axios.create({
@@ -25,7 +25,7 @@ api.interceptors.request.use(
 // Auth API
 export const authAPI = {
   register: async (userData) => {
-    const response = await api.post('/users/register', userData);
+    const response = await api.post('/api/users/register', userData);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data));
@@ -33,7 +33,7 @@ export const authAPI = {
     return response.data;
   },
   login: async (userData) => {
-    const response = await api.post('/users/login', userData);
+    const response = await api.post('/api/users/login', userData);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data));
@@ -45,7 +45,11 @@ export const authAPI = {
     localStorage.removeItem('user');
   },
   getProfile: async () => {
-    const response = await api.get('/users/profile');
+    const response = await api.get('/api/users/profile');
+    return response.data;
+  },
+  updateProfile: async (userData) => {
+    const response = await api.put('/api/users/profile', userData);
     return response.data;
   },
 };
@@ -53,27 +57,59 @@ export const authAPI = {
 // Transaction API
 export const transactionAPI = {
   getAll: async () => {
-    const response = await api.get('/transactions');
+    const response = await api.get('/api/transactions');
     return response.data;
   },
   getById: async (id) => {
-    const response = await api.get(`/transactions/${id}`);
+    const response = await api.get(`/api/transactions/${id}`);
     return response.data;
   },
   create: async (transactionData) => {
-    const response = await api.post('/transactions', transactionData);
+    const response = await api.post('/api/transactions', transactionData);
     return response.data;
   },
   update: async (id, transactionData) => {
-    const response = await api.put(`/transactions/${id}`, transactionData);
+    const response = await api.put(`/api/transactions/${id}`, transactionData);
     return response.data;
   },
   delete: async (id) => {
-    const response = await api.delete(`/transactions/${id}`);
+    const response = await api.delete(`/api/transactions/${id}`);
     return response.data;
   },
   getSummary: async () => {
-    const response = await api.get('/transactions/summary');
+    const response = await api.get('/api/transactions/summary');
+    return response.data;
+  },
+};
+
+// Savings Goal API
+export const savingsGoalAPI = {
+  get: async () => {
+    const response = await api.get('/api/savings-goal');
+    return response.data;
+  },
+  update: async (amount) => {
+    const response = await api.post('/api/savings-goal', { amount });
+    return response.data;
+  },
+};
+
+// Budget API
+export const budgetAPI = {
+  getAll: async () => {
+    const response = await api.get('/api/budget');
+    return response.data;
+  },
+  createOrUpdate: async (category, amount) => {
+    const response = await api.post('/api/budget', { category, amount });
+    return response.data;
+  },
+  updateBatch: async (budgets) => {
+    const response = await api.put('/api/budget/batch', { budgets });
+    return response.data;
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/api/budget/${id}`);
     return response.data;
   },
 };

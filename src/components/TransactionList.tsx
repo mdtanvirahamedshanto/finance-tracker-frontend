@@ -33,18 +33,23 @@ export const TransactionList = ({ transactions: propTransactions }: TransactionL
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (propTransactions) {
       setTransactions(propTransactions);
       setLoading(false);
+      setError(null);
     } else {
       const fetchTransactions = async () => {
         setLoading(true);
+        setError(null);
         try {
           const data = await transactionAPI.getAll();
           setTransactions(data);
         } catch (error) {
           console.error('Error fetching transactions:', error);
+          setError('Failed to fetch transactions. Please try again later.');
           toast({
             title: "Error",
             description: "Failed to fetch transactions",
@@ -143,6 +148,40 @@ export const TransactionList = ({ transactions: propTransactions }: TransactionL
 
   if (loading) {
     return <div className="text-center py-8">Loading transactions...</div>;
+  }
+  
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-destructive mb-2">{error}</div>
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            const fetchTransactions = async () => {
+              setLoading(true);
+              setError(null);
+              try {
+                const data = await transactionAPI.getAll();
+                setTransactions(data);
+              } catch (error) {
+                console.error('Error fetching transactions:', error);
+                setError('Failed to fetch transactions. Please try again later.');
+                toast({
+                  title: "Error",
+                  description: "Failed to fetch transactions",
+                  variant: "destructive",
+                });
+              } finally {
+                setLoading(false);
+              }
+            };
+            fetchTransactions();
+          }}
+        >
+          Try Again
+        </Button>
+      </div>
+    );
   }
 
   return (
