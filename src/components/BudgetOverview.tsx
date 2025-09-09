@@ -81,7 +81,7 @@ export const BudgetOverview = () => {
       // Group expenses by category and calculate total spent
       const categorySpending: Record<string, number> = {};
       
-      transactions.forEach((transaction: any) => {
+      (transactions || []).forEach((transaction: any) => {
         if (transaction.type === 'expense') {
           const category = transaction.category || 'Other';
           if (!categorySpending[category]) {
@@ -240,12 +240,12 @@ export const BudgetOverview = () => {
               </div>
 
               {/* Budget Tips */}
-              <div className="bg-muted/50 rounded-lg p-3 mt-4">
-                <div className="flex items-start gap-2">
-                  <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary mt-0.5 shrink-0" />
-                  <div className="text-xs text-muted-foreground">
-                    <p className="font-medium text-foreground mb-1">Budget Tip</p>
-                    <p>You're spending 15% more on shopping this month. Consider reducing non-essential purchases to stay on track.</p>
+              <div className="bg-muted/50 rounded-lg p-2 sm:p-3 mt-3 sm:mt-4">
+                <div className="flex items-start gap-1.5 sm:gap-2">
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-primary mt-0.5 shrink-0" />
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground mb-0.5 sm:mb-1">Budget Tip</p>
+                    <p className="text-xs">You're spending 15% more on shopping this month. Consider reducing non-essential purchases to stay on track.</p>
                   </div>
                 </div>
               </div>

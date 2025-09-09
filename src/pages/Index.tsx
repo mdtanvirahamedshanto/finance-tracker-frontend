@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { DateRange } from 'react-day-picker';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Target, CreditCard, PiggyBank, LogOut, Download, User, Settings, Loader2 } from 'lucide-react';
-import { transactionAPI } from '@/lib/api.js';
+import { transactionAPI,authAPI } from '@/lib/api.js';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,8 @@ const defaultFinancialData = {
 const Index = () => {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year' | 'custom'>('month');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({ income: 0, expenses: 0, balance: 0 });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -74,12 +76,23 @@ const Index = () => {
       setIsLoading(true);
       setError(null);
       try {
+        // Prepare params based on selected period and date range
+        const params = { period: selectedPeriod };
+        
+        // Add date range params if custom period is selected
+        if (selectedPeriod === 'custom' && dateRange?.from) {
+          Object.assign(params, { startDate: dateRange.from.toISOString() });
+          if (dateRange.to) {
+            Object.assign(params, { endDate: dateRange.to.toISOString() });
+          }
+        }
+        
         // Fetch financial summary
-        const summaryData = await transactionAPI.getSummary();
+        const summaryData = await transactionAPI.getSummary(params);
         setFinancialSummary(summaryData);
         
         // Fetch transactions
-        const transactionsData = await transactionAPI.getAll();
+        const transactionsData = await transactionAPI.getAll(params);
         setTransactions(transactionsData);
         
         // Set user profile from AuthContext
@@ -99,7 +112,7 @@ const Index = () => {
     };
     
     fetchData();
-  }, [user]);
+  }, [user, selectedPeriod, dateRange]);
   
   const { logout } = useAuth();
 
@@ -223,7 +236,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-surface border-b border-border/50 sticky top-0 z-50 backdrop-blur-sm bg-surface/80">
+      <header className=" border-b border-border/50 sticky top-0 z-50 backdrop-blur-sm bg-surface/80">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center space-x-2 sm:space-x-3">
@@ -237,6 +250,8 @@ const Index = () => {
                 <TimePeriodSelector 
                   selectedPeriod={selectedPeriod}
                   onPeriodChange={setSelectedPeriod}
+                  dateRange={dateRange}
+                  onDateRangeChange={setDateRange}
                 />
               </div>
               <Button 
@@ -292,6 +307,8 @@ const Index = () => {
             <TimePeriodSelector 
               selectedPeriod={selectedPeriod}
               onPeriodChange={setSelectedPeriod}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
             />
           </div>
         </div>
@@ -348,6 +365,7 @@ const Index = () => {
           savingsGoal={savingsGoal}
           currentSavings={financialSummary.balance > 0 ? financialSummary.balance : 0}
           selectedPeriod={selectedPeriod}
+          dateRange={dateRange}
           transactions={transactions}
         />
 

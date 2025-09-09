@@ -3,10 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 
+import { DateRange } from 'react-day-picker';
+
 interface QuickStatsProps {
   savingsGoal: number;
   currentSavings: number;
-  selectedPeriod: 'week' | 'month' | 'year';
+  selectedPeriod: 'week' | 'month' | 'year' | 'custom';
+  dateRange?: DateRange;
   transactions: Array<{
     _id: string;
     description: string;
@@ -18,7 +21,7 @@ interface QuickStatsProps {
   }>;
 }
 
-export const QuickStats = ({ savingsGoal, currentSavings, selectedPeriod, transactions }: QuickStatsProps) => {
+export const QuickStats = ({ savingsGoal, currentSavings, selectedPeriod, dateRange, transactions }: QuickStatsProps) => {
   const savingsProgress = (currentSavings / savingsGoal) * 100;
   const remainingAmount = savingsGoal - currentSavings;
 
@@ -27,19 +30,38 @@ export const QuickStats = ({ savingsGoal, currentSavings, selectedPeriod, transa
     const now = new Date();
     let filteredTransactions = transactions;
     
-    if (selectedPeriod === 'week') {
+    if (selectedPeriod === 'custom' && dateRange?.from) {
+      const startDate = new Date(dateRange.from);
+      startDate.setHours(0, 0, 0, 0);
+      
+      if (dateRange.to) {
+        const endDate = new Date(dateRange.to);
+        endDate.setHours(23, 59, 59, 999);
+        filteredTransactions = transactions.filter(t => {
+          const transactionDate = new Date(t.date);
+          return transactionDate >= startDate && transactionDate <= endDate;
+        });
+      } else {
+        filteredTransactions = transactions.filter(t => 
+          new Date(t.date) >= startDate
+        );
+      }
+    } else if (selectedPeriod === 'week') {
       const weekStart = new Date(now);
       weekStart.setDate(now.getDate() - now.getDay());
+      weekStart.setHours(0, 0, 0, 0);
       filteredTransactions = transactions.filter(t => 
         new Date(t.date) >= weekStart
       );
     } else if (selectedPeriod === 'month') {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      monthStart.setHours(0, 0, 0, 0);
       filteredTransactions = transactions.filter(t => 
         new Date(t.date) >= monthStart
       );
     } else if (selectedPeriod === 'year') {
       const yearStart = new Date(now.getFullYear(), 0, 1);
+      yearStart.setHours(0, 0, 0, 0);
       filteredTransactions = transactions.filter(t => 
         new Date(t.date) >= yearStart
       );
@@ -65,29 +87,30 @@ export const QuickStats = ({ savingsGoal, currentSavings, selectedPeriod, transa
   const periodLabels = {
     week: 'This Week',
     month: 'This Month',
-    year: 'This Year'
+    year: 'This Year',
+    custom: 'Custom Range'
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {/* Savings Goal Progress */}
       <Card className="hover:shadow-md transition-all duration-300">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between text-sm font-medium text-muted-foreground">
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="flex items-center justify-between text-xs sm:text-sm font-medium text-muted-foreground">
             Savings Goal
-            <Target className="h-4 w-4 text-primary" />
+            <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
+        <CardContent className="space-y-2 sm:space-y-3">
+          <div className="space-y-1 sm:space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Progress</span>
               <span className="font-medium">{savingsProgress.toFixed(1)}%</span>
             </div>
-            <Progress value={savingsProgress} className="h-2" />
+            <Progress value={savingsProgress} className="h-1.5 sm:h-2" />
           </div>
           <div className="space-y-1">
-            <div className="text-lg font-bold text-foreground">
+            <div className="text-sm sm:text-lg font-bold text-foreground">
               ${currentSavings.toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">

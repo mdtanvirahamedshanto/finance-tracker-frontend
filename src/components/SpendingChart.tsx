@@ -45,7 +45,7 @@ export const SpendingChart = ({ propTransactions }: SpendingChartProps) => {
     }
   };
   // Process transactions to get spending by category
-  const expenseTransactions = transactions.filter(t => t.type === 'expense');
+  const expenseTransactions = transactions?.filter(t => t.type === 'expense') || [];
   
   const categoryData = expenseTransactions.reduce((acc, transaction) => {
     const category = transaction.category;

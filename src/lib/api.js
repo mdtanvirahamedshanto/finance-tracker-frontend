@@ -56,8 +56,8 @@ export const authAPI = {
 
 // Transaction API
 export const transactionAPI = {
-  getAll: async () => {
-    const response = await api.get('/api/transactions');
+  getAll: async (params = {}) => {
+    const response = await api.get('/api/transactions', { params });
     return response.data;
   },
   getById: async (id) => {
@@ -76,8 +76,16 @@ export const transactionAPI = {
     const response = await api.delete(`/api/transactions/${id}`);
     return response.data;
   },
-  getSummary: async () => {
-    const response = await api.get('/api/transactions/summary');
+  getSummary: async (params = {}) => {
+    const response = await api.get('/api/transactions/summary', { params });
+    return response.data;
+  },
+  getCategoryAnalysis: async (params = {}) => {
+    const response = await api.get('/api/transactions/analysis', { params });
+    return response.data;
+  },
+  getMonthlyTrends: async (params = {}) => {
+    const response = await api.get('/api/transactions/trends', { params });
     return response.data;
   },
 };
