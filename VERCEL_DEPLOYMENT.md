@@ -44,9 +44,11 @@ Before deploying to Vercel, you need to set up the following environment variabl
 
 4. Configure the project:
    - Framework Preset: Vite
-   - Build Command: `npm run build`
+   - Build Command: `npm run build:vercel`
    - Output Directory: `dist`
    - Install Command: `npm install`
+   
+   > **Note:** The project uses a custom build script (`build.js`) that ensures all PWA files are properly included in the build.
 
 5. Add the environment variables in the "Environment Variables" section.
 
@@ -87,6 +89,34 @@ If you encounter 404 errors when refreshing pages:
 
 1. Verify that the `vercel.json` file is properly configured with the rewrite rule.
 2. Ensure that your React Router is configured correctly.
+
+### ES Module Issues
+
+If you encounter errors related to ES modules:
+
+1. Remember that this project is configured as an ES module project (`"type": "module"` in package.json).
+
+2. All JavaScript files must use ES module syntax (`import` instead of `require`).
+
+3. If you see errors like `ReferenceError: require is not defined in ES module scope`, you need to convert the file to use ES module imports:
+
+   ```javascript
+   // Instead of:
+   const { something } = require('package');
+   
+   // Use:
+   import { something } from 'package';
+   ```
+
+4. For accessing `__dirname` or `__filename` in ES modules, use:
+
+   ```javascript
+   import { fileURLToPath } from 'url';
+   import path from 'path';
+   
+   const __filename = fileURLToPath(import.meta.url);
+   const __dirname = path.dirname(__filename);
+   ```
 
 ## Additional Resources
 
