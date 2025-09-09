@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DateRange } from 'react-day-picker';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Target, CreditCard, PiggyBank, LogOut, Download, User, Settings, Loader2 } from 'lucide-react';
+import { NetworkStatus } from '@/components/NetworkStatus';
 import { transactionAPI,authAPI } from '@/lib/api.js';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -246,6 +247,7 @@ const Index = () => {
               <h1 className="text-lg sm:text-xl font-semibold text-foreground">FinanceTracker</h1>
             </div>
             <div className="flex items-center gap-2">
+              <NetworkStatus className="hidden md:flex mr-2" />
               <div className="hidden sm:block">
                 <TimePeriodSelector 
                   selectedPeriod={selectedPeriod}
