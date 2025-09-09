@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,29 @@ interface EditBudgetDialogProps {
   onBudgetsUpdated: () => void;
 }
 
+// Available budget categories
+const AVAILABLE_CATEGORIES = [
+  'Housing',
+  'Food',
+  'Transportation',
+  'Entertainment',
+  'Shopping',
+  'Utilities',
+  'Other',
+  // Add more categories as needed
+];
+
+// Category colors
+const CATEGORY_COLORS: Record<string, string> = {
+  Housing: '#FF6384',
+  Food: '#36A2EB',
+  Transportation: '#FFCE56',
+  Entertainment: '#4BC0C0',
+  Shopping: '#9966FF',
+  Utilities: '#FF9F40',
+  Other: '#C9CBCF',
+};
+
 export function EditBudgetDialog({ 
   open, 
   onOpenChange, 
@@ -43,7 +67,14 @@ export function EditBudgetDialog({
   });
   
   const [loading, setLoading] = useState(false);
+  const [newCategory, setNewCategory] = useState<string>('');
+  const [newAmount, setNewAmount] = useState<string>('0');
   const { toast } = useToast();
+  
+  // Get categories that are not yet in the budget
+  const availableCategories = AVAILABLE_CATEGORIES.filter(
+    category => !Object.keys(editedBudgets).includes(category)
+  );
 
   const handleInputChange = (category: string, value: string) => {
     const amount = parseInt(value, 10);
@@ -52,6 +83,20 @@ export function EditBudgetDialog({
         ...prev,
         [category]: amount
       }));
+    }
+  };
+  
+  const handleAddCategory = () => {
+    if (newCategory && !editedBudgets[newCategory]) {
+      const amount = parseInt(newAmount, 10);
+      if (!isNaN(amount) && amount >= 0) {
+        setEditedBudgets(prev => ({
+          ...prev,
+          [newCategory]: amount
+        }));
+        setNewCategory('');
+        setNewAmount('0');
+      }
     }
   };
 
@@ -96,28 +141,62 @@ export function EditBudgetDialog({
         </DialogHeader>
         
         <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-          {budgetItems.map((item) => (
-            <div key={item.category} className="grid grid-cols-2 items-center gap-4">
+          {/* Existing budget items */}
+          {Object.entries(editedBudgets).map(([category, amount]) => (
+            <div key={category} className="grid grid-cols-2 items-center gap-4">
               <div className="flex items-center gap-2">
                 <div 
                   className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: item.color || 'hsl(210, 30%, 60%)' }}
+                  style={{ backgroundColor: CATEGORY_COLORS[category] || CATEGORY_COLORS.Other }}
                 />
-                <Label htmlFor={`budget-${item.category}`} className="text-sm">
-                  {item.category}
+                <Label htmlFor={`budget-${category}`} className="text-sm">
+                  {category}
                 </Label>
               </div>
               <Input
-                id={`budget-${item.category}`}
+                id={`budget-${category}`}
                 type="number"
-                min="0"
-                step="50"
-                value={editedBudgets[item.category]}
-                onChange={(e) => handleInputChange(item.category, e.target.value)}
+                value={amount}
+                onChange={(e) => handleInputChange(category, e.target.value)}
                 className="text-right"
               />
             </div>
           ))}
+          
+          {/* Add new category */}
+          {availableCategories.length > 0 && (
+            <div className="border-t pt-4 mt-2">
+              <h4 className="text-sm font-medium mb-3">Add New Category</h4>
+              <div className="grid grid-cols-[1fr,auto,auto] gap-2 items-center">
+                <Select value={newCategory} onValueChange={setNewCategory}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(e.target.value)}
+                  className="w-24 text-right"
+                />
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  onClick={handleAddCategory}
+                  disabled={!newCategory}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         
         <DialogFooter>

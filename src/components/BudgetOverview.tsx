@@ -91,6 +91,11 @@ export const BudgetOverview = () => {
         }
       });
       
+      // Make sure 'Other' category exists in spending data
+      if (!categorySpending['Other']) {
+        categorySpending['Other'] = 0;
+      }
+      
       // Create budget items from spending data and budgets
       const budgetItems: BudgetItem[] = [];
       
@@ -102,6 +107,21 @@ export const BudgetOverview = () => {
           spent: categorySpending[budget.category] || 0,
           color: CATEGORY_COLORS[budget.category] || CATEGORY_COLORS.Other,
         });
+        
+        // Remove processed categories from spending data
+        delete categorySpending[budget.category];
+      });
+      
+      // Add any categories that have spending but no budget (including 'Other')
+      Object.entries(categorySpending).forEach(([category, spent]) => {
+        if (spent > 0 || category === 'Other') {
+          budgetItems.push({
+            category,
+            budgeted: 0, // Default budget of 0
+            spent,
+            color: CATEGORY_COLORS[category] || CATEGORY_COLORS.Other,
+          });
+        }
       });
       
       setBudgetData(budgetItems);
