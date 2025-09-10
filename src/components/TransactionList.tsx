@@ -283,7 +283,7 @@ export const TransactionList = ({
                     ${
                       transaction.type === "income"
                         ? "text-success"
-                        : "text-foreground"
+                        : "text-red-600"
                     }
                   `}
                   >
